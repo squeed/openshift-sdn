@@ -25,7 +25,7 @@ import (
 
 	"k8s.io/klog"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/record"
@@ -220,9 +220,15 @@ func (sct *ServiceChangeTracker) Update(previous, current *v1.Service) bool {
 	if svc == nil {
 		svc = previous
 	}
+
 	// previous == nil && current == nil is unexpected, we should return false directly.
 	if svc == nil {
+		klog.V(1).Infof("sct: nil update!?")
 		return false
+	}
+	// HACK HACK HACK
+	if svc.Namespace == "openshift-ingress" {
+		klog.V(1).Infof("Got update for ingress, old %#v new %#v", previous, current)
 	}
 	metrics.ServiceChangesTotal.Inc()
 	namespacedName := types.NamespacedName{Namespace: svc.Namespace, Name: svc.Name}
@@ -239,6 +245,10 @@ func (sct *ServiceChangeTracker) Update(previous, current *v1.Service) bool {
 	change.current = sct.serviceToServiceMap(current)
 	// if change.previous equal to change.current, it means no change
 	if reflect.DeepEqual(change.previous, change.current) {
+		// HACK HACK HACK
+		if svc.Namespace == "openshift-ingress" {
+			klog.V(1).Infof("update to %s is no-op", namespacedName.String())
+		}
 		delete(sct.items, namespacedName)
 	}
 	metrics.ServiceChangesPending.Set(float64(len(sct.items)))

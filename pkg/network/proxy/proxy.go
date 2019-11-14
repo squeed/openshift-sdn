@@ -370,6 +370,7 @@ func (proxy *OsdnProxy) OnServiceAdd(service *corev1.Service) {
 }
 
 func (proxy *OsdnProxy) OnServiceUpdate(oldService, service *corev1.Service) {
+	klog.V(2).Infof("sdn proxy: update svc %s/%s: %v", service.Namespace, service.Name, service)
 	proxy.baseProxy.OnServiceUpdate(oldService, service)
 }
 

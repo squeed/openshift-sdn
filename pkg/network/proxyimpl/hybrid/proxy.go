@@ -119,10 +119,10 @@ func (p *HybridProxier) OnServiceUpdate(oldService, service *corev1.Service) {
 	// NB: usingUserspace can only change in the endpoints handler,
 	// so that should deal with calling OnServiceDelete on switches
 	if isUsingUserspace, ok := p.usingUserspace[svcName]; ok && isUsingUserspace {
-		klog.V(6).Infof("hybrid proxy: update svc %s/%s in unidling proxy", service.Namespace, service.Name)
+		klog.V(1).Infof("hybrid proxy: update svc %s/%s in unidling proxy", service.Namespace, service.Name)
 		p.unidlingProxy.OnServiceUpdate(oldService, service)
 	} else {
-		klog.V(6).Infof("hybrid proxy: update svc %s/%s in main proxy", service.Namespace, service.Name)
+		klog.V(1).Infof("hybrid proxy: update svc %s/%s in main proxy", service.Namespace, service.Name)
 		p.mainProxy.OnServiceUpdate(oldService, service)
 	}
 }
@@ -188,7 +188,7 @@ func (p *HybridProxier) switchService(name types.NamespacedName) {
 
 	switched, ok := p.switchedToUserspace[name]
 	if ok && p.usingUserspace[name] == switched {
-		klog.V(6).Infof("hybrid proxy: ignoring duplicate switchService(%s/%s)", name.Namespace, name.Name)
+		klog.V(1).Infof("hybrid proxy: ignoring duplicate switchService(%s/%s)", name.Namespace, name.Name)
 		return
 	}
 
@@ -199,11 +199,11 @@ func (p *HybridProxier) switchService(name types.NamespacedName) {
 	}
 
 	if p.usingUserspace[name] {
-		klog.V(6).Infof("hybrid proxy: switching svc %s/%s to unidling proxy", svc.Namespace, svc.Name)
+		klog.V(1).Infof("hybrid proxy: switching svc %s/%s to unidling proxy", svc.Namespace, svc.Name)
 		p.unidlingProxy.OnServiceAdd(svc)
 		p.mainProxy.OnServiceDelete(svc)
 	} else {
-		klog.V(6).Infof("hybrid proxy: switching svc %s/%s to main proxy", svc.Namespace, svc.Name)
+		klog.V(1).Infof("hybrid proxy: switching svc %s/%s to main proxy", svc.Namespace, svc.Name)
 		p.mainProxy.OnServiceAdd(svc)
 		p.unidlingProxy.OnServiceDelete(svc)
 	}

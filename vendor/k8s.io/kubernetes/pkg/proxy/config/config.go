@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1alpha1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	coreinformers "k8s.io/client-go/informers/core/v1"
@@ -329,7 +329,7 @@ func (c *ServiceConfig) handleAddService(obj interface{}) {
 		return
 	}
 	for i := range c.eventHandlers {
-		klog.V(4).Info("Calling handler.OnServiceAdd")
+		klog.V(1).Infof("Calling handler.OnServiceAdd")
 		c.eventHandlers[i].OnServiceAdd(service)
 	}
 }
@@ -346,7 +346,7 @@ func (c *ServiceConfig) handleUpdateService(oldObj, newObj interface{}) {
 		return
 	}
 	for i := range c.eventHandlers {
-		klog.V(4).Info("Calling handler.OnServiceUpdate")
+		klog.V(1).Infof("Calling handler[%d].OnServiceUpdate (%s/%s)", i, service.Namespace, service.Name)
 		c.eventHandlers[i].OnServiceUpdate(oldService, service)
 	}
 }

@@ -32,7 +32,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -488,6 +488,9 @@ func (proxier *Proxier) OnServiceAdd(service *v1.Service) {
 // OnServiceUpdate is called whenever modification of an existing
 // service object is observed.
 func (proxier *Proxier) OnServiceUpdate(oldService, service *v1.Service) {
+	if service != nil {
+		klog.V(1).Infof("ipt proxier: OnServiceUpdate(%s/%s)", service.Namespace, service.Name)
+	}
 	if proxier.serviceChanges.Update(oldService, service) && proxier.isInitialized() {
 		proxier.syncRunner.Run()
 	}
@@ -845,6 +848,12 @@ func (proxier *Proxier) syncProxyRules() {
 		svcNameString := svcInfo.serviceNameString
 		hasEndpoints := len(proxier.endpointsMap[svcName]) > 0
 
+		// HACK: Log what we know about the ingress controller
+		if svcNameString == "openshift-ingress/router-default:https" {
+			klog.V(1).Infof("service %s has endpoints %+v loadbalancer %+v", svcNameString, hasEndpoints, svcInfo.LoadBalancerIPStrings())
+			klog.V(1).Infof("service: %#v", svcInfo.BaseServiceInfo)
+		}
+
 		svcChain := svcInfo.servicePortChainName
 		if hasEndpoints {
 			// Create the per-service chain, retaining counters if possible.
@@ -974,6 +983,7 @@ func (proxier *Proxier) syncProxyRules() {
 
 		// Capture load-balancer ingress.
 		fwChain := svcInfo.serviceFirewallChainName
+
 		for _, ingress := range svcInfo.LoadBalancerIPStrings() {
 			if ingress != "" {
 				if hasEndpoints {
